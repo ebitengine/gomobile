@@ -10,6 +10,8 @@ import (
 	"go/types"
 	"math"
 	"strings"
+	"unicode"
+	"unicode/utf8"
 
 	"github.com/ebitengine/gomobile/internal/importers/objc"
 )
@@ -217,8 +219,8 @@ func (g *ObjcGen) GenH() error {
 			}
 			objcType := g.objcType(obj.Type())
 			g.objcdoc(g.docs[obj.Name()].Doc())
-			g.Printf("+ (%s) %s;\n", objcType, objcNameReplacer(lowerFirst(obj.Name())))
-			g.Printf("+ (void) set%s:(%s)v;\n", obj.Name(), objcType)
+			g.Printf("+ (%s) %s;\n", objcType, objcGetterName(obj.Name()))
+			g.Printf("+ (void) %s:(%s)v;\n", objcSetterName(obj.Name()), objcType)
 			g.Printf("\n")
 		}
 		g.Printf("@end\n\n")
@@ -345,7 +347,7 @@ func (g *ObjcGen) genVarM(o *types.Var) {
 	objcType := g.objcType(o.Type())
 
 	// setter
-	g.Printf("+ (void) set%s:(%s)v {\n", o.Name(), objcType)
+	g.Printf("+ (void) %s:(%s)v {\n", objcSetterName(o.Name()), objcType)
 	g.Indent()
 	g.genWrite("v", o.Type(), modeRetained)
 	g.Printf("var_set%s_%s(_v);\n", g.pkgPrefix, o.Name())
@@ -354,7 +356,7 @@ func (g *ObjcGen) genVarM(o *types.Var) {
 	g.Printf("}\n\n")
 
 	// getter
-	g.Printf("+ (%s) %s {\n", objcType, objcNameReplacer(lowerFirst(o.Name())))
+	g.Printf("+ (%s) %s {\n", objcType, objcGetterName(o.Name()))
 	g.Indent()
 	g.Printf("%s r0 = ", g.cgoType(o.Type()))
 	g.Printf("var_get%s_%s();\n", g.pkgPrefix, o.Name())
@@ -555,7 +557,7 @@ func (s *funcSummary) asFunc(g *ObjcGen) string {
 }
 
 func (s *funcSummary) asMethod(g *ObjcGen) string {
-	return fmt.Sprintf("(%s)%s%s", s.ret, objcNameReplacer(lowerFirst(s.name)), s.asSignature(g))
+	return fmt.Sprintf("(%s)%s%s", s.ret, objcGetterName(s.name), s.asSignature(g))
 }
 
 func (s *funcSummary) asSignature(g *ObjcGen) string {
@@ -617,7 +619,7 @@ func (s *funcSummary) callMethod(g *ObjcGen) string {
 		}
 		params = append(params, fmt.Sprintf("%s:&%s", key, p.name))
 	}
-	return fmt.Sprintf("%s%s", objcNameReplacer(lowerFirst(s.name)), strings.Join(params, " "))
+	return fmt.Sprintf("%s%s", objcGetterName(s.name), strings.Join(params, " "))
 }
 
 func (s *funcSummary) returnsVal() bool {
@@ -654,7 +656,7 @@ func (g *ObjcGen) genFuncM(obj *types.Func) {
 
 func (g *ObjcGen) genGetter(oName string, f *types.Var) {
 	t := f.Type()
-	g.Printf("- (%s)%s {\n", g.objcType(t), objcNameReplacer(lowerFirst(f.Name())))
+	g.Printf("- (%s)%s {\n", g.objcType(t), objcGetterName(f.Name()))
 	g.Indent()
 	g.Printf("int32_t refnum = go_seq_go_to_refnum(self._ref);\n")
 	g.Printf("%s r0 = ", g.cgoType(f.Type()))
@@ -668,7 +670,7 @@ func (g *ObjcGen) genGetter(oName string, f *types.Var) {
 func (g *ObjcGen) genSetter(oName string, f *types.Var) {
 	t := f.Type()
 
-	g.Printf("- (void)set%s:(%s)v {\n", f.Name(), g.objcType(t))
+	g.Printf("- (void)%s:(%s)v {\n", objcSetterName(f.Name()), g.objcType(t))
 	g.Indent()
 	g.Printf("int32_t refnum = go_seq_go_to_refnum(self._ref);\n")
 	g.genWrite("v", f.Type(), modeRetained)
@@ -1109,7 +1111,7 @@ func (g *ObjcGen) genStructH(obj *types.TypeName, t *types.Struct) {
 		g.objcdoc(doc.Member(f.Name()))
 
 		// properties are atomic by default so explicitly say otherwise
-		g.Printf("@property (nonatomic) %s %s;\n", typ, objcNameReplacer(lowerFirst(name)))
+		g.Printf("@property (nonatomic) %s %s;\n", typ, objcGetterName(name))
 	}
 
 	// exported methods
@@ -1397,6 +1399,25 @@ var objcNameReplacer = newNameSanitizer([]string{
 	"id", "in", "init", "inout", "int", "long", "nil", "oneway",
 	"out", "self", "short", "signed", "super", "unsigned", "void",
 	"volatile"})
+
+// objcGetterName returns the Objective-C property/getter selector for a
+// Go field, variable or method named name. The pipeline (lowerFirst +
+// objcNameReplacer) lowercases acronym prefixes (OSName -> osName) and
+// suffixes reserved-word collisions with an underscore (ID -> id_).
+func objcGetterName(name string) string {
+	return objcNameReplacer(lowerFirst(name))
+}
+
+// objcSetterName returns the setter selector matching the property name
+// produced by objcGetterName.
+func objcSetterName(name string) string {
+	prop := objcGetterName(name)
+	if prop == "" {
+		return "set"
+	}
+	r, n := utf8.DecodeRuneInString(prop)
+	return "set" + string(unicode.ToUpper(r)) + prop[n:]
+}
 
 const (
 	objcPreamble = `// Objective-C API for talking to %[1]s Go package.

@@ -671,6 +671,40 @@ func TestCustomPrefix(t *testing.T) {
 	}
 }
 
+func TestObjcPropertyName(t *testing.T) {
+	testCases := []struct {
+		in, getter, setter string
+	}{
+		// Normal cases pass through unchanged.
+		{"Name", "name", "setName"},
+		{"PublicKeyDER", "publicKeyDER", "setPublicKeyDER"},
+		{"Foo", "foo", "setFoo"},
+		// Acronym prefix is lowercased except for the trailing capital,
+		// matching Cocoa naming convention. The setter must agree with
+		// the property name (OSName -> osName -> setOsName).
+		{"OSName", "osName", "setOsName"},
+		{"OSDevice", "osDevice", "setOsDevice"},
+		// Reserved-word collisions get suffixed with an underscore by
+		// objcNameReplacer, and the setter must match (ID -> id_ ->
+		// setId_).
+		{"ID", "id_", "setId_"},
+		{"In", "in_", "setIn_"},
+		{"Init", "init_", "setInit_"},
+		// Degenerate empty input (should never happen for an exported
+		// field, but be defensive).
+		{"", "", "set"},
+	}
+
+	for _, tc := range testCases {
+		if got := objcGetterName(tc.in); got != tc.getter {
+			t.Errorf("objcGetterName(%q) = %q; want %q", tc.in, got, tc.getter)
+		}
+		if got := objcSetterName(tc.in); got != tc.setter {
+			t.Errorf("objcSetterName(%q) = %q; want %q", tc.in, got, tc.setter)
+		}
+	}
+}
+
 func TestLowerFirst(t *testing.T) {
 	testCases := []struct {
 		in, want string
