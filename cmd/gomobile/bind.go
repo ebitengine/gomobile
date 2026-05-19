@@ -84,6 +84,19 @@ func runBind(cmd *command) error {
 		return fmt.Errorf(`invalid -target=%q: %v`, buildTarget, err)
 	}
 
+	if !mobileModuleAvailable() {
+		fmt.Fprintln(os.Stderr, `gomobile bind requires github.com/ebitengine/gomobile in the current module, but it is not in the module dependency graph.
+
+Add it with:
+
+	go get -tool github.com/ebitengine/gomobile/cmd/gobind
+
+This records a tool directive in go.mod so subsequent go mod tidy runs keep
+the dependency. See https://go.dev/doc/modules/managing-dependencies#tools
+for details and https://go.dev/issue/77183 for background.`)
+		return errors.New("missing github.com/ebitengine/gomobile dependency")
+	}
+
 	if isAndroidPlatform(targets[0].platform) {
 		if bindPrefix != "" {
 			return fmt.Errorf("-prefix is supported only for Apple targets")
@@ -353,4 +366,16 @@ func areGoModulesUsed() (bool, error) {
 		areGoModulesUsedResult.used = outstr != ""
 	})
 	return areGoModulesUsedResult.used, areGoModulesUsedResult.err
+}
+
+// mobileModuleAvailable reports whether github.com/ebitengine/gomobile/bind is
+// resolvable through the current module. In GOPATH mode or when the module
+// probe fails, it returns true and lets gobind surface any error itself.
+func mobileModuleAvailable() bool {
+	modulesUsed, err := areGoModulesUsed()
+	if err != nil || !modulesUsed {
+		return true
+	}
+	pkgs, err := packages.Load(&packages.Config{Mode: packages.NeedName}, "github.com/ebitengine/gomobile/bind")
+	return err == nil && len(pkgs) == 1 && pkgs[0].Name != "" && len(pkgs[0].Errors) == 0
 }
