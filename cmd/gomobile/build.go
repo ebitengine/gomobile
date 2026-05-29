@@ -60,6 +60,9 @@ are copied into the output.
 Flag -iosversion sets the minimal version of the iOS SDK to compile against.
 The default version is 13.0.
 
+Flag -macosversion sets the minimal version of the macOS SDK to compile against.
+By default, no minimum macOS version is set.
+
 Flag -androidapi sets the Android API version to compile against.
 The default and minimum is 16.
 
@@ -234,22 +237,23 @@ func printcmd(format string, args ...interface{}) {
 
 // "Build flags", used by multiple commands.
 var (
-	buildA          bool        // -a
-	buildI          bool        // -i
-	buildN          bool        // -n
-	buildV          bool        // -v
-	buildX          bool        // -x
-	buildO          string      // -o
-	buildGcflags    string      // -gcflags
-	buildLdflags    string      // -ldflags
-	buildOverlay    string      // -overlay
-	buildTarget     string      // -target
-	buildTrimpath   bool        // -trimpath
-	buildWork       bool        // -work
-	buildBundleID   string      // -bundleid
-	buildIOSVersion string      // -iosversion
-	buildAndroidAPI int         // -androidapi
-	buildTags       stringsFlag // -tags
+	buildA            bool        // -a
+	buildI            bool        // -i
+	buildN            bool        // -n
+	buildV            bool        // -v
+	buildX            bool        // -x
+	buildO            string      // -o
+	buildGcflags      string      // -gcflags
+	buildLdflags      string      // -ldflags
+	buildOverlay      string      // -overlay
+	buildTarget       string      // -target
+	buildTrimpath     bool        // -trimpath
+	buildWork         bool        // -work
+	buildBundleID     string      // -bundleid
+	buildIOSVersion   string      // -iosversion
+	buildMacOSVersion string      // -macosversion
+	buildAndroidAPI   int         // -androidapi
+	buildTags         stringsFlag // -tags
 )
 
 func addBuildFlags(cmd *command) {
@@ -260,6 +264,7 @@ func addBuildFlags(cmd *command) {
 	cmd.flag.StringVar(&buildTarget, "target", "android", "")
 	cmd.flag.StringVar(&buildBundleID, "bundleid", "", "")
 	cmd.flag.StringVar(&buildIOSVersion, "iosversion", "13.0", "")
+	cmd.flag.StringVar(&buildMacOSVersion, "macosversion", "", "")
 	cmd.flag.IntVar(&buildAndroidAPI, "androidapi", minAndroidAPI, "")
 
 	cmd.flag.BoolVar(&buildA, "a", false, "")
