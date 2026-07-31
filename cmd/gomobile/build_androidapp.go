@@ -214,7 +214,11 @@ func goAndroidBuild(pkg *packages.Package, targets []targetInfo) (_ map[string]b
 				return nil
 			}
 
-			if rel, err := filepath.Rel(assetsDir, path); rel == "icon.png" && err == nil {
+			rel, err := filepath.Rel(assetsDir, path)
+			if err != nil {
+				return err
+			}
+			if rel == "icon.png" {
 				arsc.iconPath = path
 				// TODO returning here does not write the assets/icon.png to the final assets output,
 				// making it unavailable via the assets API. Should the file be duplicated into assets
@@ -222,7 +226,7 @@ func goAndroidBuild(pkg *packages.Package, targets []targetInfo) (_ map[string]b
 				return nil
 			}
 
-			name := "assets/" + path[len(assetsDir)+1:]
+			name := "assets/" + filepath.ToSlash(rel)
 			return apkwWriteFile(name, path)
 		})
 		if err != nil {

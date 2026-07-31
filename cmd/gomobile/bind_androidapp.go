@@ -187,7 +187,11 @@ func buildAAR(srcDir, androidDir string, pkgs []*packages.Package, targets []tar
 						return err
 					}
 					defer f.Close()
-					name := "assets/" + path[len(assetsDir)+1:]
+					rel, err := filepath.Rel(assetsDir, path)
+					if err != nil {
+						return err
+					}
+					name := "assets/" + filepath.ToSlash(rel)
 					if orig, exists := files[name]; exists {
 						return fmt.Errorf("package %s asset name conflict: %s already added from package %s",
 							pkg.PkgPath, name, orig)
