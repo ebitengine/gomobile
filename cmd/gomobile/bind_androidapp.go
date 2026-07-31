@@ -195,7 +195,7 @@ func buildAAR(srcDir, androidDir string, pkgs []*packages.Package, targets []tar
 					files[name] = pkg.PkgPath
 					w, err := aarwcreate(name)
 					if err != nil {
-						return nil
+						return err
 					}
 					_, err = io.Copy(w, f)
 					return err
