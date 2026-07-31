@@ -23,7 +23,7 @@ import (
 	"golang.org/x/tools/go/packages"
 )
 
-func goAndroidBuild(pkg *packages.Package, targets []targetInfo) (map[string]bool, error) {
+func goAndroidBuild(pkg *packages.Package, targets []targetInfo) (_ map[string]bool, retErr error) {
 	ndkRoot, err := ndkRoot(targets...)
 	if err != nil {
 		return nil, err
@@ -112,9 +112,7 @@ func goAndroidBuild(pkg *packages.Package, targets []targetInfo) (map[string]boo
 			return nil, err
 		}
 		defer func() {
-			if cerr := f.Close(); err == nil {
-				err = cerr
-			}
+			retErr = errors.Join(retErr, f.Close())
 		}()
 		out = f
 	}

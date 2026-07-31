@@ -200,7 +200,7 @@ func copyFile(dst, src string) error {
 	})
 }
 
-func writeFile(filename string, generate func(io.Writer) error) error {
+func writeFile(filename string, generate func(io.Writer) error) (retErr error) {
 	if buildV {
 		fmt.Fprintf(os.Stderr, "write %s\n", filename)
 	}
@@ -218,11 +218,8 @@ func writeFile(filename string, generate func(io.Writer) error) error {
 		return err
 	}
 	defer func() {
-		if cerr := f.Close(); err == nil {
-			err = cerr
-		}
+		retErr = errors.Join(retErr, f.Close())
 	}()
-
 	return generate(f)
 }
 
