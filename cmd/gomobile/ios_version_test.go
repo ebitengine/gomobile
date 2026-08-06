@@ -28,6 +28,10 @@ func TestParseIOSVersion(t *testing.T) {
 		{input: "13..1", wantErr: true},
 		{input: "13.1.1.1", wantErr: true},
 		{input: "13.x", wantErr: true},
+		{input: "+13", wantErr: true},
+		{input: "13.+1", wantErr: true},
+		{input: "13.-1", wantErr: true},
+		{input: "13.1.-1", wantErr: true},
 	}
 
 	for _, tc := range tests {
@@ -60,6 +64,7 @@ func TestValidateCatalystVersion(t *testing.T) {
 		{platform: "maccatalyst", iOSVersion: "14"},
 		{platform: "maccatalyst", iOSVersion: "12.9.9", wantErr: true},
 		{platform: "maccatalyst", iOSVersion: "13.x", wantErr: true},
+		{platform: "maccatalyst", iOSVersion: "13.-1", wantErr: true},
 		{platform: "ios", iOSVersion: "invalid"},
 	}
 

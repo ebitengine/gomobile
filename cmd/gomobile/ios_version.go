@@ -19,6 +19,14 @@ func parseIOSVersion(s string) (major, minor, patch int, err error) {
 
 	var components [3]int
 	for i, part := range parts {
+		if part == "" {
+			return 0, 0, 0, errors.New("must have one to three numeric components")
+		}
+		for _, c := range part {
+			if c < '0' || c > '9' {
+				return 0, 0, 0, errors.New("must have one to three numeric components")
+			}
+		}
 		n, err := strconv.Atoi(part)
 		if err != nil {
 			return 0, 0, 0, err
