@@ -98,15 +98,12 @@ be selected by specifying target type with the architecture name. E.g.
 -target=android/arm,android/386.
 
 For Apple -target platforms, gomobile must be run on an OS X machine with
-Xcode installed.
-
-By default, -target ios will generate an XCFramework for both ios
-and iossimulator. Multiple Apple targets can be specified, creating a "fat"
-XCFramework with each slice. To generate a fat XCFramework that supports
-iOS, macOS, and macCatalyst for all supportec architectures (amd64 and arm64),
-specify -target ios,macos,maccatalyst. A subset of instruction sets can be
-selectged by specifying the platform with an architecture name. E.g.
--target=ios/arm64,maccatalyst/arm64.
+Xcode installed. The build command creates an .app bundle. The output name
+specified by -o must end in .app. By default, -target ios includes binaries
+for all supported iOS device and simulator architectures. A subset of
+instruction sets can be selected by specifying the platform with an
+architecture name. E.g. -target=ios/arm64,maccatalyst/arm64.
+Unlike gomobile build, gomobile bind creates an XCFramework.
 
 If the package directory contains an assets subdirectory, its contents
 are copied into the output.
