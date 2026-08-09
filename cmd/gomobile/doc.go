@@ -24,7 +24,7 @@ Commands:
 	bind        build a library for Android and iOS
 	build       compile android APK and iOS app
 	clean       remove object files and cached gomobile files
-	init        build OpenAL for Android
+	init        initialize gomobile tools and optionally build OpenAL for Android
 	install     compile android APK and install on device
 	version     print version
 
@@ -140,7 +140,7 @@ Usage:
 
 # Clean removes object files and cached NDK files downloaded by gomobile init
 
-# Build OpenAL for Android
+# Initialize gomobile tools and optionally build OpenAL for Android
 
 Usage:
 

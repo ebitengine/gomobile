@@ -28,7 +28,7 @@ var cmdInit = &command{
 	run:   runInit,
 	Name:  "init",
 	Usage: "[-openal dir]",
-	Short: "build OpenAL for Android",
+	Short: "initialize gomobile tools and optionally build OpenAL for Android",
 	Long: `
 If a OpenAL source directory is specified with -openal, init will
 build an Android version of OpenAL for use with gomobile build
