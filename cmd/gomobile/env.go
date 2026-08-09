@@ -17,6 +17,7 @@ import (
 	"strings"
 
 	"github.com/ebitengine/gomobile/internal/sdkpath"
+	"golang.org/x/mod/semver"
 )
 
 // General mobile build environment. Initialized by envInit.
@@ -418,7 +419,7 @@ func ndkRoot(targets ...targetInfo) (string, error) {
 		var selected string
 		for _, ndkRoot := range ndkRoots {
 			version := ndkVersion(ndkRoot)
-			if version >= maxVersion {
+			if semver.Compare("v"+version, "v"+maxVersion) >= 0 {
 				maxVersion = version
 				selected = ndkRoot
 			}

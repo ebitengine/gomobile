@@ -116,13 +116,13 @@ func TestNdkRoot(t *testing.T) {
 		path := filepath.Join("ndk", "newer")
 		platforms := `{"min":19,"max":32}`
 		abis := `{"arm64-v8a": {}, "armeabi-v7a": {}, "x86_64": {}}`
-		version := "17.2.0"
+		version := "17.10.0"
 		newerNDK := makeMockNDK(path, version, platforms, abis)
 
 		path = filepath.Join("ndk", "older")
 		platforms = `{"min":16,"max":31}`
 		abis = `{"arm64-v8a": {}, "armeabi-v7a": {}, "x86": {}}`
-		version = "17.1.0"
+		version = "17.9.0"
 		olderNDK := makeMockNDK(path, version, platforms, abis)
 
 		testCases := []struct {
