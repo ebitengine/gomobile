@@ -52,9 +52,10 @@ example, in Android Studio (1.2+), an AAR file can be imported using
 the module import wizard (File > New > New Module > Import .JAR or
 .AAR package), and setting it as a new dependency
 (File > Project Structure > Dependencies).  This requires 'javac'
-(version 1.7+) and Android SDK (API level 16 or newer) to build the
-library for Android. The environment variable ANDROID_HOME must be set
-to the path to Android SDK. Use the -javapkg flag to specify the Java
+(version 1.8+) and Android SDK (API level 16 or newer) to build the
+library for Android. The ANDROID_HOME and ANDROID_NDK_HOME environment
+variables can be used to specify the Android SDK and NDK if they are
+not in the default locations. Use the -javapkg flag to specify the Java
 package prefix for the generated classes.
 
 By default, -target=android builds shared libraries for all supported
@@ -72,8 +73,9 @@ classes.
 
 The -v flag provides verbose output, including the list of packages built.
 
-The build flags -a, -n, -x, -gcflags, -ldflags, -tags, -trimpath, and -work
-are shared with the build command. For documentation, see 'go help build'.
+The build flags -a, -n, -x, -gcflags, -ldflags, -overlay, -tags, -trimpath,
+and -work are shared with the build command. For documentation,
+see 'go help build'.
 
 # Compile android APK and iOS app
 
@@ -126,8 +128,9 @@ output file name depends on the package built.
 
 The -v flag provides verbose output, including the list of packages built.
 
-The build flags -a, -i, -n, -x, -gcflags, -ldflags, -tags, -trimpath, and -work are
-shared with the build command. For documentation, see 'go help build'.
+The build flags -a, -n, -x, -gcflags, -ldflags, -overlay, -tags, -trimpath,
+and -work are shared with the build command. For documentation, see
+'go help build'.
 
 # Remove object files and cached gomobile files
 
@@ -135,7 +138,7 @@ Usage:
 
 	gomobile clean
 
-Clean removes object files and cached NDK files downloaded by gomobile init.
+# Clean removes object files and cached NDK files downloaded by gomobile init
 
 # Build OpenAL for Android
 
@@ -158,8 +161,8 @@ attached mobile device.
 
 Only -target android is supported. The 'adb' tool must be on the PATH.
 
-The build flags -a, -i, -n, -x, -gcflags, -ldflags, -tags, -trimpath, and -work are
-shared with the build command.
+The build flags -a, -n, -x, -gcflags, -ldflags, -overlay, -tags, -trimpath,
+and -work are shared with the build command.
 For documentation, see 'go help build'.
 
 # Print version

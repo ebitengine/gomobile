@@ -72,7 +72,7 @@ output file name depends on the package built.
 
 The -v flag provides verbose output, including the list of packages built.
 
-The build flags -a, -i, -n, -x, -gcflags, -ldflags, -overlay, -tags, -trimpath,
+The build flags -a, -n, -x, -gcflags, -ldflags, -overlay, -tags, -trimpath,
 and -work are shared with the build command. For documentation, see
 'go help build'.
 `,
@@ -234,7 +234,6 @@ func printcmd(format string, args ...interface{}) {
 // "Build flags", used by multiple commands.
 var (
 	buildA            bool        // -a
-	buildI            bool        // -i
 	buildN            bool        // -n
 	buildV            bool        // -v
 	buildX            bool        // -x
@@ -264,7 +263,6 @@ func addBuildFlags(cmd *command) {
 	cmd.flag.IntVar(&buildAndroidAPI, "androidapi", minAndroidAPI, "")
 
 	cmd.flag.BoolVar(&buildA, "a", false, "")
-	cmd.flag.BoolVar(&buildI, "i", false, "")
 	cmd.flag.BoolVar(&buildTrimpath, "trimpath", false, "")
 	cmd.flag.Var(&buildTags, "tags", "")
 }
@@ -315,9 +313,6 @@ func goCmdAt(at string, subcmd string, srcs []string, env []string, args ...stri
 	}
 	if buildV {
 		cmd.Args = append(cmd.Args, "-v")
-	}
-	if subcmd != "install" && buildI {
-		cmd.Args = append(cmd.Args, "-i")
 	}
 	if buildX {
 		cmd.Args = append(cmd.Args, "-x")
