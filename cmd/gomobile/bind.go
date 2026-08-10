@@ -252,6 +252,29 @@ func getModuleVersions(targetPlatform string, targetArch string, src string) (*m
 		return nil, nil
 	}
 
+	f, err := parseModuleVersions(bytes.NewReader(output))
+	if err != nil {
+		return nil, err
+	}
+
+	v, err := ensureGoVersion()
+	if err != nil {
+		return nil, err
+	}
+	// ensureGoVersion can return an empty string for a devel version. In this case, use the minimum version.
+	if v == "" {
+		v = fmt.Sprintf("go1.%d", minimumGoMinorVersion)
+	}
+	if err := f.AddGoStmt(strings.TrimPrefix(v, "go")); err != nil {
+		return nil, err
+	}
+
+	return f, nil
+}
+
+// parseModuleVersions builds the module file of the generated module from the
+// JSON stream that 'go list -m -json all' writes.
+func parseModuleVersions(r io.Reader) (*modfile.File, error) {
 	type Module struct {
 		Main    bool
 		Path    string
@@ -264,7 +287,7 @@ func getModuleVersions(targetPlatform string, targetArch string, src string) (*m
 	if err := f.AddModuleStmt("gobind"); err != nil {
 		return nil, err
 	}
-	e := json.NewDecoder(bytes.NewReader(output))
+	e := json.NewDecoder(r)
 	for {
 		var mod *Module
 		err := e.Decode(&mod)
@@ -278,8 +301,17 @@ func getModuleVersions(targetPlatform string, targetArch string, src string) (*m
 					// replaced by a local directory
 					p = mod.Replace.Dir
 				}
-				if err := f.AddReplace(mod.Path, mod.Version, p, v); err != nil {
+				// The generated module requires a different set of modules than the
+				// original module does, so minimal version selection can select a
+				// version other than mod.Version. Leave the replaced version empty to
+				// keep the directive effective whichever version is selected.
+				if err := f.AddReplace(mod.Path, "", p, v); err != nil {
 					return nil, err
+				}
+				if mod.Version != "" {
+					if err := f.AddRequire(mod.Path, mod.Version); err != nil {
+						return nil, err
+					}
 				}
 			} else {
 				// When the version part is empty, the module is local and mod.Dir represents the location.
@@ -297,18 +329,6 @@ func getModuleVersions(targetPlatform string, targetArch string, src string) (*m
 		if err == io.EOF {
 			break
 		}
-	}
-
-	v, err := ensureGoVersion()
-	if err != nil {
-		return nil, err
-	}
-	// ensureGoVersion can return an empty string for a devel version. In this case, use the minimum version.
-	if v == "" {
-		v = fmt.Sprintf("go1.%d", minimumGoMinorVersion)
-	}
-	if err := f.AddGoStmt(strings.TrimPrefix(v, "go")); err != nil {
-		return nil, err
 	}
 
 	return f, nil
