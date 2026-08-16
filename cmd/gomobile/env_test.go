@@ -5,11 +5,59 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
 )
+
+func TestBuildEnvInitCleanup(t *testing.T) {
+	// Prepare an incomplete NDK without a compiler so that environment
+	// initialization fails after creating the work directory.
+	ndkRoot := t.TempDir()
+	metaDir := filepath.Join(ndkRoot, "meta")
+	if err := os.Mkdir(metaDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(metaDir, "platforms.json"), []byte(`{"min":16,"max":32}`), 0644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(metaDir, "abis.json"), []byte(`{}`), 0644); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("ANDROID_NDK_HOME", ndkRoot)
+
+	oldBuildAndroidAPI := buildAndroidAPI
+	oldBuildN := buildN
+	oldBuildWork := buildWork
+	oldTmpdir := tmpdir
+	t.Cleanup(func() {
+		buildAndroidAPI = oldBuildAndroidAPI
+		buildN = oldBuildN
+		buildWork = oldBuildWork
+		tmpdir = oldTmpdir
+	})
+	buildAndroidAPI = minAndroidAPI
+	buildN = false
+	buildWork = false
+
+	cleanup, err := buildEnvInit()
+	workDir := tmpdir
+	t.Cleanup(func() { os.RemoveAll(workDir) })
+	if err == nil {
+		if cleanup != nil {
+			cleanup()
+		}
+		t.Fatal("buildEnvInit succeeded with an NDK missing its compiler")
+	}
+	if cleanup != nil {
+		t.Fatal("buildEnvInit returned a cleanup function with an error")
+	}
+	if _, err := os.Stat(tmpdir); !errors.Is(err, os.ErrNotExist) {
+		t.Errorf("work directory still exists after buildEnvInit failed: %v", err)
+	}
+}
 
 func TestNdkRoot(t *testing.T) {
 	home, err := os.MkdirTemp("", "gomobile-test-")

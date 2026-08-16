@@ -140,6 +140,11 @@ func buildEnvInit() (cleanup func(), err error) {
 		}
 		removeAll(tmpdir)
 	}
+	defer func() {
+		if err != nil {
+			cleanupFn()
+		}
+	}()
 	if buildN {
 		tmpdir = "$WORK"
 		cleanupFn = func() {}
